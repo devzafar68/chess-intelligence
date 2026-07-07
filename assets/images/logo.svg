@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" aria-label="Chess Intelligence logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8C98A"/>
+      <stop offset="1" stop-color="#8E6E35"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#g)" d="M6 20h12l-.6-3H6.6L6 20Zm2-5h8c0-3-.8-4.6-2.4-6.2L15 6l-1.4-1.2-1 .9C11.5 4.9 10 5.3 8.7 6.2 7 7.5 6 9.5 6 12v3h2Zm-1.5-9c1-1.5 3-2 4.5-1.6l.7-.7c-.6-.6-1.5-.8-2.4-.5-1 .3-1.9 1.2-2.8 2.8Z"/>
+  <path stroke="url(#g)" stroke-width="1" stroke-linecap="round" d="M4 3.5c1 .6 2.4.6 3.6 0"/>
+</svg>

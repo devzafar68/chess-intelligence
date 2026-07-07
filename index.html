@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chess Intelligence — Know your opponent before they know you</title>
+<meta name="description" content="Chess Intelligence crawls the open web for every PGN ever played. Search by player, FIDE ID, or position and receive a cinematic intelligence dossier on any opponent." />
+<meta name="author" content="Chess Intelligence" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="Chess Intelligence — Know your opponent before they know you" />
+<meta property="og:description" content="AI dossiers on every chess opponent. Search by name, FIDE ID or position." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/images/background.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Chess Intelligence" />
+<meta name="twitter:description" content="Know your opponent before they know you." />
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16.png" />
+<link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png" />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" />
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Reusable inline SVG symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-knight" viewBox="0 0 24 24"><path fill="currentColor" d="M6 20h12l-.6-3H6.6L6 20Zm2-5h8c0-3-.8-4.6-2.4-6.2L15 6l-1.4-1.2-1 .9C11.5 4.9 10 5.3 8.7 6.2 7 7.5 6 9.5 6 12v3h2Zm-1.5-9c1-1.5 3-2 4.5-1.6l.7-.7c-.6-.6-1.5-.8-2.4-.5-1 .3-1.9 1.2-2.8 2.8Z"/><path d="M4 3.5c1 .6 2.4.6 3.6 0" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6h.01"/><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"/><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"/><path d="M12 18h.01"/><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"/><circle cx="12" cy="12" r="2"/><path d="m13.41 10.59 5.66-5.66"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24" fill="currentColor"><path d="M9 7H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2v1a3 3 0 0 1-3 3v2a5 5 0 0 0 5-5V9a2 2 0 0 0 0-2Zm10 0h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2v1a3 3 0 0 1-3 3v2a5 5 0 0 0 5-5V9a2 2 0 0 0 0-2Z"/></symbol>
+    <symbol id="i-fingerprint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/></symbol>
+  </defs>
+</svg>
+
+<!-- Cursor spotlight -->
+<div class="cursor-spotlight" id="cursor-spotlight" aria-hidden="true"></div>
+
+<!-- ================= Header ================= -->
+<header class="site-header">
+  <div class="navbar glass-panel">
+    <a href="#" class="brand">
+      <span class="brand-badge">
+        <img src="assets/images/logo-knight.png" alt="" width="20" height="20" />
+        <span class="brand-dot"></span>
+      </span>
+      <span class="brand-text">chess<span class="gold-hyphen">-</span>intelligence</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#how">How it Works</a>
+      <a href="#features">The Dossier</a>
+      <a href="#about">About</a>
+      <a href="#">Sign In</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="#panel" class="btn btn-gold">
+        <svg class="ico"><use href="#i-knight"/></svg>
+        Start Investigation
+        <svg class="ico"><use href="#i-arrow"/></svg>
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <svg class="ico"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu glass-panel" id="mobile-menu" hidden>
+    <a href="#how">How it Works</a>
+    <a href="#features">The Dossier</a>
+    <a href="#about">About</a>
+    <a href="#panel" class="btn btn-gold btn-block">Start Investigation <svg class="ico"><use href="#i-arrow"/></svg></a>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= Hero ================= -->
+<section class="hero">
+  <!-- Cinematic backdrop -->
+  <div class="backdrop" aria-hidden="true">
+    <img src="assets/images/background.jpg" alt="" class="backdrop-photo" loading="eager"/>
+    <div class="backdrop-notation" aria-hidden="true"></div>
+    <svg class="backdrop-strings" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M120 80 L780 640" stroke="#B92B2B" stroke-width="1"/>
+      <path d="M980 120 L200 700" stroke="#B92B2B" stroke-width="1"/>
+      <path d="M600 40 L640 760" stroke="#B92B2B" stroke-width="1"/>
+    </svg>
+    <div class="backdrop-vignette"></div>
+    <div class="backdrop-spotlight"></div>
+    <div class="backdrop-grain"></div>
+    <div class="backdrop-particles" id="particles"></div>
+  </div>
+
+  <div class="container hero-inner">
+    <div class="badge-pill">
+      <span class="dot dot-gold pulse"></span>
+      Intelligence engine · v1.0
+      <span class="badge-sep"></span>
+      <svg class="ico gold"><use href="#i-knight"/></svg>
+      <span class="muted">Live crawler online</span>
+    </div>
+
+    <h1 class="hero-title font-editorial">
+      Know your opponent<br />
+      <span class="italic gold-text">before they know you.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Chess Intelligence crawls the open web for every PGN ever played.
+      Search by player, FIDE ID or position — and receive a cinematic dossier
+      on any opponent in seconds.
+    </p>
+
+    <div class="hero-stats">
+      <span>Search 184M+ PGNs</span>
+      <span class="dot dot-mute"></span>
+      <span class="stat-live"><span class="dot dot-green blink"></span> Real-time indexed</span>
+      <span class="dot dot-mute"></span>
+      <span>Updated daily</span>
+      <span class="dot dot-mute"></span>
+      <span class="gold-soft">Public PGN sources</span>
+    </div>
+  </div>
+
+  <img src="assets/images/mascot-hero.png" alt="Chess Intelligence mascot — knight detective" class="mascot-hero float" width="220" height="293" />
+
+  <!-- ================= Investigation Panel ================= -->
+  <div id="panel" class="panel-wrap container">
+    <div class="panel-glow" aria-hidden="true"></div>
+    <div class="panel glass-panel">
+      <span class="panel-hairline"></span>
+      <span class="panel-shimmer"></span>
+
+      <!-- window chrome -->
+      <div class="panel-chrome">
+        <div class="chrome-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="chrome-file">
+          <svg class="ico gold"><use href="#i-fingerprint"/></svg>
+          Case file · CI-2026-00421
+        </div>
+        <div class="chrome-secure">
+          <span class="dot dot-green blink"></span>
+          Secure · TLS
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <!-- LEFT: Player search -->
+        <div class="panel-col">
+          <div class="panel-label">
+            <svg class="ico gold"><use href="#i-knight"/></svg>
+            Search by player
+          </div>
+
+          <div class="search-input-wrap">
+            <div class="search-input">
+              <svg class="ico gold"><use href="#i-search"/></svg>
+              <input id="player-search" type="text" placeholder="Player name, FIDE ID, or paste a game link…" aria-label="Search players" />
+              <kbd>⌘ K</kbd>
+            </div>
+          </div>
+
+          <div class="chip-row">
+            <span class="chip-label">Try</span>
+            <button class="chip suggestion" data-fill="Magnus Carlsen"><svg class="ico"><use href="#i-search"/></svg>Magnus Carlsen</button>
+            <button class="chip suggestion" data-fill="Hikaru Nakamura"><svg class="ico"><use href="#i-search"/></svg>Hikaru Nakamura</button>
+            <button class="chip suggestion" data-fill="Alireza Firouzja"><svg class="ico"><use href="#i-search"/></svg>Alireza Firouzja</button>
+            <button class="chip suggestion" data-fill="Ding Liren"><svg class="ico"><use href="#i-search"/></svg>Ding Liren</button>
+            <button class="chip suggestion" data-fill="FIDE ID 1503014"><svg class="ico"><use href="#i-search"/></svg>FIDE ID 1503014</button>
+          </div>
+
+          <div class="chip-row">
+            <span class="chip-label">Trending openings</span>
+            <button class="chip chip-gold suggestion" data-fill="Sicilian">Sicilian</button>
+            <button class="chip chip-gold suggestion" data-fill="Ruy López">Ruy López</button>
+            <button class="chip chip-gold suggestion" data-fill="Italian">Italian</button>
+            <button class="chip chip-gold suggestion" data-fill="French">French</button>
+            <button class="chip chip-gold suggestion" data-fill="Caro-Kann">Caro-Kann</button>
+          </div>
+
+          <button class="btn btn-gold btn-lg">
+            <svg class="ico"><use href="#i-radar"/></svg>
+            Investigate player
+            <svg class="ico"><use href="#i-arrow"/></svg>
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="panel-divider">
+          <span class="divider-badge glass-panel">or</span>
+        </div>
+
+        <!-- RIGHT: Position search -->
+        <div class="panel-col">
+          <div class="panel-label between">
+            <span><svg class="ico gold"><use href="#i-target"/></svg> Search by position</span>
+            <span class="live-scan"><span class="dot dot-gold pulse"></span> Live scan</span>
+          </div>
+
+          <div class="board">
+            <div class="board-topbar">
+              <span><span class="dot dot-red blink"></span> REC · 00:12:04</span>
+              <span>CH-01 · 4K</span>
+            </div>
+
+            <div class="board-inner">
+              <div class="rank-labels"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+              <div class="board-squares" id="board-squares">
+                <!-- 64 squares injected by JS, plus overlays below -->
+                <div class="board-scan"></div>
+                <div class="board-reticle">
+                  <div class="ret-ring r1"></div>
+                  <div class="ret-ring r2"></div>
+                  <div class="ret-ring r3"></div>
+                  <div class="ret-vert"></div>
+                  <div class="ret-horiz"></div>
+                  <div class="ret-dot"></div>
+                </div>
+                <div class="board-corner tl"></div>
+                <div class="board-corner tr"></div>
+                <div class="board-corner bl"></div>
+                <div class="board-corner br"></div>
+                <div class="board-move"></div>
+                <div class="board-sheen"></div>
+              </div>
+              <div></div>
+              <div class="file-labels"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+            </div>
+
+            <div class="board-status">
+              <span><svg class="ico gold"><use href="#i-target"/></svg> Matching 12,481 games</span>
+              <span class="mono">e4 · d4 · Nf3</span>
+            </div>
+          </div>
+
+          <div class="position-controls">
+            <button class="btn btn-ghost"><svg class="ico"><use href="#i-undo"/></svg> Undo</button>
+            <button class="btn btn-ghost"><svg class="ico"><use href="#i-reset"/></svg> Reset</button>
+            <input placeholder="Paste FEN…" class="fen-input mono" aria-label="Paste FEN" />
+          </div>
+
+          <button class="btn btn-gold-outline btn-lg">
+            <svg class="ico gold"><use href="#i-target"/></svg>
+            Search position
+            <svg class="ico gold"><use href="#i-arrow"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Live Database Ticker ================= -->
+    <div class="ticker-wrap">
+      <div class="ticker-header">
+        <span><span class="dot dot-green blink"></span> Recent games · live index</span>
+        <span class="hairline"></span>
+        <span class="muted">Auto-refresh · 30s</span>
+      </div>
+      <div class="ticker">
+        <div class="ticker-track" id="ticker-track">
+          <!-- injected by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Dossier ================= -->
+<section id="features" class="dossier-section">
+  <div class="dossier-glow" aria-hidden="true"></div>
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow"><svg class="ico"><use href="#i-knight"/></svg> The dossier</div>
+      <h2 class="font-editorial section-title">Not a result. <span class="italic gold-text">A classified file.</span></h2>
+      <p class="section-lede">Every search assembles a beautifully bound intelligence dossier — portrait, opening repertoire, weaknesses, first moves, downloadable PGN. Nothing generic. Everything cinematic.</p>
+    </div>
+
+    <div class="dossier-stack">
+      <article class="dossier">
+        <span class="paperclip" aria-hidden="true"></span>
+        <span class="stamp">TOP&nbsp;SECRET</span>
+        <span class="seal">CI · Seal</span>
+        <span class="fold-corner" aria-hidden="true"></span>
+
+        <header class="dossier-header">
+          <div class="dossier-subject">
+            <div class="portrait">
+              <span class="portrait-initials">MC</span>
+              <span class="portrait-badge"><svg class="ico"><use href="#i-knight"/></svg></span>
+            </div>
+            <div>
+              <div class="dossier-eyebrow">Subject dossier · CI-2026-00421</div>
+              <h3 class="font-editorial dossier-name">Magnus Carlsen</h3>
+              <div class="dossier-meta">
+                <span>🇳🇴 Norway</span><span class="sep">·</span>
+                <span>FIDE 1503014</span><span class="sep">·</span>
+                <span class="elo-chip">ELO 2839</span><span class="sep">·</span>
+                <span>GM</span>
+              </div>
+            </div>
+          </div>
+          <div class="dossier-filed">
+            <div>Filed · 26 · 06 · 2026</div>
+            <div>Analyst · CI-Ω</div>
+            <div class="clearance">CLEARANCE · LVL 3</div>
+          </div>
+        </header>
+
+        <div class="dossier-body">
+          <div class="dossier-block">
+            <div class="block-label">Signature line · white</div>
+            <div class="mini-board" id="mini-board"></div>
+            <div class="pgn mono">
+              1. e4 e5&nbsp;&nbsp;2. Nf3 Nc6&nbsp;&nbsp;3. Bb5 a6<br/>
+              4. Ba4 Nf6&nbsp;&nbsp;5. O-O Be7&nbsp;&nbsp;<span class="pgn-hl">6. Re1</span>
+            </div>
+            <button class="btn btn-paper"><svg class="ico"><use href="#i-download"/></svg> PGN · 184,392</button>
+          </div>
+
+          <div class="dossier-block">
+            <div>
+              <div class="block-label">Favourite opening</div>
+              <div class="font-editorial block-value">Ruy López · Berlin</div>
+            </div>
+            <div>
+              <div class="block-label">Win rate (white)</div>
+              <div class="winrate">
+                <span class="font-editorial winrate-value">72.4%</span>
+                <span class="winrate-note">↑ vs top-10</span>
+              </div>
+              <div class="winrate-bar"><span></span></div>
+            </div>
+            <div>
+              <div class="block-label">Last game</div>
+              <div class="last-game"><span class="win-chip">W</span> vs Firouzja · 42 moves · Titled Tuesday</div>
+            </div>
+          </div>
+
+          <div class="dossier-block">
+            <div>
+              <div class="block-label">Weakness signal</div>
+              <div class="font-editorial block-value">Sharp Sicilian sidelines</div>
+              <div class="italic block-note">"Late-game inaccuracies in sub-3′ finishes."</div>
+            </div>
+            <div>
+              <div class="block-label">Evidence tags</div>
+              <div class="evidence-tags">
+                <span>Aggressive</span><span>Endgame virtuoso</span><span>Time-scramble</span><span>Berlin loyal</span>
+              </div>
+            </div>
+            <div class="cross-ref">File cross-referenced with · 47 tournaments</div>
+          </div>
+        </div>
+
+        <footer class="dossier-footer">
+          <div class="dossier-foot-label">chess-intelligence · classified · do not duplicate</div>
+          <div class="barcode" aria-hidden="true"></div>
+        </footer>
+      </article>
+
+      <aside class="evidence-card" aria-label="Evidence card">
+        <div class="evidence-eyebrow">Evidence · 04</div>
+        <div class="font-editorial evidence-quote">"Prefers 1.e4 in classical time controls."</div>
+        <div class="hairline"></div>
+        <div class="evidence-verified"><span class="dot dot-green blink"></span> Verified · 3 sources</div>
+      </aside>
+
+      <aside class="sticky-note" aria-label="Analyst note">
+        <div class="sticky-eyebrow">Analyst note</div>
+        <div class="font-editorial italic sticky-body">Tilts in sub-3 minute endgames. Exploit with time pressure.</div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= How it Works ================= -->
+<section id="how" class="how-section">
+  <div class="how-spot" aria-hidden="true"></div>
+  <div class="container">
+    <div class="how-head">
+      <div>
+        <div class="section-eyebrow"><svg class="ico"><use href="#i-knight"/></svg> How it works</div>
+        <h2 class="font-editorial section-title">Three steps from<br/><span class="italic gold-text">curiosity to advantage.</span></h2>
+      </div>
+      <a href="#panel" class="btn btn-outline"><svg class="ico gold"><use href="#i-sparkles"/></svg> Try it live <svg class="ico"><use href="#i-arrow"/></svg></a>
+    </div>
+
+    <div class="how-grid">
+      <svg class="how-line" viewBox="0 0 800 20" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 10 L800 10" stroke="rgba(200,163,95,0.4)" stroke-width="1" stroke-dasharray="6 6" class="dash" fill="none"/>
+        <circle cx="266" cy="10" r="3" fill="#C8A35F"/>
+        <circle cx="533" cy="10" r="3" fill="#C8A35F"/>
+      </svg>
+
+      <article class="how-card glass-panel reveal">
+        <div class="how-card-head">
+          <span class="how-step"><svg class="ico"><use href="#i-knight"/></svg> Step 01</span>
+          <span class="how-dot"></span>
+        </div>
+        <div class="how-image"><img src="assets/images/mascot-search.png" alt="" loading="lazy"/><span class="frame-tag">ci-frame · 1</span></div>
+        <h3 class="font-editorial">Find the target</h3>
+        <p>Search by name, FIDE ID or a live position — even mid-game, from any device.</p>
+      </article>
+
+      <article class="how-card glass-panel reveal">
+        <div class="how-card-head">
+          <span class="how-step"><svg class="ico"><use href="#i-knight"/></svg> Step 02</span>
+          <span class="how-dot"></span>
+        </div>
+        <div class="how-image"><img src="assets/images/mascot-ai.png" alt="" loading="lazy"/><span class="frame-tag">ci-frame · 2</span></div>
+        <h3 class="font-editorial">AI investigation</h3>
+        <p>Our crawler stitches thousands of PGNs into a single intelligence graph in seconds.</p>
+      </article>
+
+      <article class="how-card glass-panel reveal">
+        <div class="how-card-head">
+          <span class="how-step"><svg class="ico"><use href="#i-knight"/></svg> Step 03</span>
+          <span class="how-dot"></span>
+        </div>
+        <div class="how-image"><img src="assets/images/mascot-report.png" alt="" loading="lazy"/><span class="frame-tag">ci-frame · 3</span></div>
+        <h3 class="font-editorial">Read the intelligence</h3>
+        <p>A beautiful cinematic dossier — openings, weaknesses, patterns, downloads.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section id="about" class="cta-section">
+  <div class="cta-bg" aria-hidden="true">
+    <img src="assets/images/background.jpg" alt="" loading="lazy"/>
+    <div class="cta-vignette"></div>
+    <div class="cta-spot"></div>
+    <div class="cta-grain"></div>
+  </div>
+  <div class="container cta-inner">
+    <div class="badge-pill gold-border">
+      <svg class="ico gold"><use href="#i-knight"/></svg> Begin file
+    </div>
+    <h2 class="font-editorial cta-title">Every opponent<br/><span class="italic gold-text">leaves clues.</span></h2>
+    <p class="cta-lede">Start your first investigation in under a minute. No credit card, no cover story.</p>
+    <div class="cta-actions">
+      <a href="#panel" class="btn btn-gold btn-xl"><svg class="ico"><use href="#i-knight"/></svg> Start your investigation <svg class="ico"><use href="#i-arrow"/></svg></a>
+      <a href="#how" class="btn btn-outline btn-xl">See how it works</a>
+    </div>
+    <div class="cta-live"><span class="dot dot-green"></span> Live · 2,431,908 files ready to open</div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= Footer ================= -->
+<footer class="site-footer">
+  <span class="footer-hairline"></span>
+
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <div class="brand small">
+        <span class="brand-badge"><img src="assets/images/logo-knight.png" alt="" width="20" height="20"/></span>
+        <span class="brand-text">chess<span class="gold-hyphen">-</span>intelligence</span>
+      </div>
+      <p class="footer-quote font-editorial italic">
+        <svg class="ico gold"><use href="#i-quote"/></svg>
+        In chess, intelligence wins before the first move.
+      </p>
+      <div class="badge-pill small"><span class="dot dot-green blink"></span> All systems nominal</div>
+    </div>
+
+    <div class="footer-col">
+      <div class="footer-title"><svg class="ico gold"><use href="#i-knight"/></svg> Product</div>
+      <ul><li><a href="#">How it works</a></li><li><a href="#">The dossier</a></li><li><a href="#">Pricing</a></li><li><a href="#">Changelog</a></li></ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-title"><svg class="ico gold"><use href="#i-knight"/></svg> Company</div>
+      <ul><li><a href="#">About</a></li><li><a href="#">Ethics</a></li><li><a href="#">Press</a></li><li><a href="#">Careers</a></li></ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-title"><svg class="ico gold"><use href="#i-knight"/></svg> Sources</div>
+      <ul><li><a href="#">Official archives</a></li><li><a href="#">Tournament records</a></li><li><a href="#">Community databases</a></li></ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-title"><svg class="ico gold"><use href="#i-knight"/></svg> Legal</div>
+      <ul><li><a href="#">Terms</a></li><li><a href="#">Privacy</a></li><li><a href="#">Data ethics</a></li><li><a href="#">Contact</a></li></ul>
+    </div>
+  </div>
+
+  <div class="container footer-bottom">
+    <span class="hairline"></span>
+    <div class="footer-legal">
+      <div>© 2026 Chess Intelligence · Assembled with care.</div>
+      <div class="mono">CI · v1.0 · Secure</div>
+    </div>
+  </div>
+
+  <div class="mascot-footer" aria-hidden="true">
+    <span class="mascot-bubble font-editorial italic">"Case closed."</span>
+    <img src="assets/images/mascot-footer.png" alt="" loading="lazy" width="160" height="213" class="float"/>
+  </div>
+  <div class="footprints" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
